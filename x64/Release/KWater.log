@@ -1,0 +1,6 @@
+﻿  KWaterDB.cpp
+C:\Users\KOREA\Documents\GitHub\KwaterSedimentPrediction\KWater\KWater\KWaterDB.cpp(22,114): warning C4311: '형식 캐스트': 'MYSQL *'에서 'BOOL'(으)로 포인터가 잘립니다.
+C:\Users\KOREA\Documents\GitHub\KwaterSedimentPrediction\KWater\KWater\KWaterDB.cpp(22,114): warning C4302: '형식 캐스트': 'MYSQL *'에서 'BOOL'(으)로 잘립니다.
+C:\Users\KOREA\Documents\GitHub\KwaterSedimentPrediction\KWater\KWater\KWaterDB.cpp(55,97): warning C4311: '형식 캐스트': 'MYSQL *'에서 'BOOL'(으)로 포인터가 잘립니다.
+C:\Users\KOREA\Documents\GitHub\KwaterSedimentPrediction\KWater\KWater\KWaterDB.cpp(55,97): warning C4302: '형식 캐스트': 'MYSQL *'에서 'BOOL'(으)로 잘립니다.
+LINK : fatal error LNK1181: 'mysql.lib' 입력 파일을 열 수 없습니다.
