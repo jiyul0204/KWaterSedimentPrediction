@@ -277,10 +277,10 @@ void CKWaterDlg::On_DB_Export() // DB 내보내기
 
 LRESULT CKWaterDlg::UpdateInform(WPARAM wparam, LPARAM lparam)
 {
-	SetDlgItemTextW(IDC_EDIT_AREA,(LPCTSTR)tb.GetArea());
-	SetDlgItemTextW(IDC_EDIT_HEIGHT,(LPCTSTR)tb.GetHeight());
-	SetDlgItemTextW(IDC_EDIT_LENGTH, (LPCTSTR)tb.GetLength());
-	SetDlgItemTextW(IDC_EDIT_DAM, (LPCTSTR)tb.GetName());
+	SetDlgItemText(IDC_EDIT_AREA,(LPCTSTR)tb.GetArea());
+	SetDlgItemText(IDC_EDIT_HEIGHT,(LPCTSTR)tb.GetHeight());
+	SetDlgItemText(IDC_EDIT_LENGTH, (LPCTSTR)tb.GetLength());
+	SetDlgItemText(IDC_EDIT_DAM, (LPCTSTR)tb.GetName());
 
 	return LRESULT();
 }
