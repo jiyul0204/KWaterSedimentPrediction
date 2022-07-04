@@ -2,7 +2,8 @@
 #include "KWaterDB.h"
 
 KWaterDB::KWaterDB() : CWnd()
-	,connection(nullptr)
+	
+	, m_cstSchema(_T("kwatersedimentpredict"))
 {
 }
 
@@ -35,7 +36,7 @@ char* KWaterDB::CStringToChar(CString csting)
 VOID KWaterDB::FreeSQL(MYSQL_RES* res)
 {
 	mysql_free_result(res);
-	mysql_close(connection);
+	//mysql_close(connection);
 }
 
 CDamTable::CDamTable()
@@ -88,7 +89,7 @@ VOID CDamTable::GetFieldsNum(MYSQL_RES* res)
 	m_nFieldsCnt = mysql_num_fields(res);
 }
 
-BOOL CDamTable::Insert(CString cstDamName, FLOAT fDamLength, FLOAT fDamHigh, FLOAT fBasinArea, FLOAT fFW, FLOAT FWL) 
+BOOL CDamTable::Insert(CString cstDamName, FLOAT fDamLength, FLOAT fDamHigh, FLOAT fBasinArea, FLOAT fFW, FLOAT FWL)
 {
 	CString Insertcode;
 	Insertcode.Format(_T("INSERT INTO %s (`damName`, `damLength`, `damHigh`, `basinArea`, `fullWaterLevel`, `floodWaterLevel`) values(%s ,%f, %f, %f, %f, %f)"),
@@ -97,3 +98,30 @@ BOOL CDamTable::Insert(CString cstDamName, FLOAT fDamLength, FLOAT fDamHigh, FLO
 	INT retVal(mysql_query(GetConnection(), CStringToChar(Insertcode)));
 	return !retVal;
 }
+
+CPredictionsoilerosionTable::CPredictionsoilerosionTable()
+	: KWaterDB()
+	, m_cstTablename(L"predictionsoilerosion")
+{
+}
+
+CPredictionsoilerosionTable::~CPredictionsoilerosionTable()
+{
+}
+
+BOOL CPredictionsoilerosionTable::ConnectToDB()
+{
+	connection = mysql_init(NULL);
+	return (BOOL)mysql_real_connect(GetConnection(), DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT, NULL, 0);
+}
+
+BOOL CPredictionsoilerosionTable::Insert(INT nDam, INT nYear, INT nMonth, FLOAT fTPrecip, FLOAT fRfIntensity,FLOAT fRfSoil, FLOAT fRfSoil_Intensity, FLOAT fSunshine, FLOAT eva)
+{
+	CString Insertcode;
+	Insertcode.Format(_T("INSERT INTO %s.%s (damCode, year, month, totalPrecipitation, rainfallIntensity, rainfall_soilErosion, rainfallIntensity_soilErosion, sunshine, evapotranspiration) values(%d, %d ,%d, %f, %f, %f, %f, %f, %f)"),
+		m_cstSchema, m_cstTablename, nDam, nYear, nMonth, fTPrecip, fRfIntensity, fRfSoil, fRfSoil_Intensity,fSunshine, eva);
+
+	INT retVal(mysql_query(GetConnection(), CStringToChar(Insertcode)));
+	return !retVal;
+}
+

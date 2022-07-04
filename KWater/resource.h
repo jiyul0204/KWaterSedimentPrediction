@@ -40,6 +40,7 @@
 #define IDC_EDIT_FLOODWATERLEVEL        1022
 #define IDC_GROUP_BASIC_PARAMS2         1023
 #define IDC_STATIC_MONTH                1024
+#define IDC_BTN_RESET                   1025
 #define ID_DB_IMPORT                    32771
 #define ID_DB_EXPORT                    32772
 #define ID_Menu                         32773
@@ -50,7 +51,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        135
 #define _APS_NEXT_COMMAND_VALUE         32774
-#define _APS_NEXT_CONTROL_VALUE         1019
+#define _APS_NEXT_CONTROL_VALUE         1026
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

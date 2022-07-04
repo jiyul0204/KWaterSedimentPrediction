@@ -9,12 +9,13 @@ public:
 	virtual ~KWaterDB();
 
 public:
-	MYSQL*					connection;
 
 public:
-	MYSQL*					GetConnection() { return connection; };
+
 	BOOL					ConnectToDB(MYSQL* mysql);
-	
+
+	CString					m_cstSchema;
+
 	VOID						Finish_with_error(MYSQL* con);
 	VOID						FreeSQL(MYSQL_RES* res);
 
@@ -28,6 +29,7 @@ public:
 	virtual ~CDamTable();
 
 protected:
+	MYSQL* connection;
 	HWND					m_ParentHwnd;
 
 	CString					m_cstTablename;
@@ -39,6 +41,7 @@ protected:
 	INT						m_nFieldsCnt;
 
 public:
+	MYSQL* GetConnection() { return connection; };
 	CString					m_cstFindDam;
 
 	//Getter
@@ -54,11 +57,20 @@ public:
 	void						SetFindDamcode(CString Dam) { m_cstFindDam = Dam; };
 	virtual BOOL			ConnectToDB();
 	BOOL					Insert(CString cstDamName, FLOAT fDamLength, FLOAT fDamHigh, FLOAT fBasinArea, FLOAT fFW, FLOAT FWL);
+	
 
 };
 
 class CPredictionsoilerosionTable : public KWaterDB
 {
 public:
-
+	CPredictionsoilerosionTable();
+	virtual ~CPredictionsoilerosionTable();
+protected:
+	MYSQL* connection;
+	CString					m_cstTablename;
+public:
+	MYSQL* GetConnection() { return connection; };
+	virtual BOOL			ConnectToDB();
+	BOOL					Insert(INT nDam, INT nYear, INT nMonth, FLOAT fTPrecip, FLOAT fRfIntensity, FLOAT fRfSoil, FLOAT fRfSoil_Intensity, FLOAT fSunshine, FLOAT eva);
 };

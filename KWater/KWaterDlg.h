@@ -21,6 +21,13 @@
 using namespace std;
 
 #define SAFE_DELETE_ARRAY(ptr)    { if ((ptr)!=NULL) delete[] (ptr); (ptr) = NULL; }
+
+enum MODE
+{
+	EVE,
+	SOIL
+};
+
 class CKWaterDlg : public CDialogEx
 {
 public:
@@ -37,7 +44,8 @@ protected:
 	HICON m_hIcon;
 
 protected:
-	CDamTable tb;
+	CDamTable m_CDamTable;
+	CPredictionsoilerosionTable m_CPredictionsoilerosionTable;
 
 	CChartCtrl m_ChartCtrl;
 	CChartStandardAxis* m_pBottomAxis;
@@ -49,12 +57,23 @@ public:
 	INT m_nMaxMonth;		//X축 끝값
 	INT m_nSize;		//데이터 갯수
 
+	FLOAT m_fPrecip;	//총강수량
+	FLOAT m_fRfIntensity;	//강우강도
+	FLOAT m_fRfSoil	;		//토사유발 강우량
+	FLOAT m_fRfSoil_Intensity;	// 토사유발 강우강도
+	FLOAT m_fSunshine;		//증발산량
+	FLOAT m_feva;		//일조량 (값이 없어도 예측에 무방함 )	
+
 	FLOAT m_fMinVar;		//Y축 초기값
 	FLOAT m_fMaxVar;		 //Y축 끝값
 
+	INT m_nReset;			//리셋시 초기화되는 월
+	vector<FLOAT>m_vfEvaperMon;	//월평균 증발산량
 public:
+	BOOL ISCode();
 	void DrawGraph();
-	void CalcEvapotranspiration(vector<double>* func, vector<int>nvX);
+	vector<FLOAT> CalcMonthEvapotranspiration(vector<DOUBLE>* vec, INT nMonth);
+	void CalcPredict(vector<double>* func, vector<int>nvX, INT nMonth, INT nMode);
 
 	virtual BOOL OnInitDialog();
 	afx_msg HCURSOR OnQueryDragIcon();
@@ -69,4 +88,5 @@ public:
 	afx_msg void OnBnClickedBtnSearch();
 	afx_msg void OnCbnSelchangeComboYear();
 	afx_msg void OnCbnSelchangeComboMonth();
+	afx_msg void OnBnClickedBtnReset();
 };

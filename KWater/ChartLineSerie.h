@@ -2,7 +2,7 @@
  *
  *	ChartLineSerie.h
  *
- *	Written by Cédric Moonen (cedric_moonen@hotmail.com)
+ *	Written by C?ric Moonen (cedric_moonen@hotmail.com)
  *
  *
  *

@@ -40,6 +40,7 @@ CKWaterDlg::CKWaterDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_KWATER_DIALOG, pParent)
 	, m_nMinMonth(1)
 	, m_nMaxMonth(12)
+	, m_nReset(-1)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDI_ICON_KWATER); 
 }
@@ -62,14 +63,43 @@ BEGIN_MESSAGE_MAP(CKWaterDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_SEARCH, &CKWaterDlg::OnBnClickedBtnSearch)
 	ON_CBN_SELCHANGE(IDC_COMBO_YEAR, &CKWaterDlg::OnCbnSelchangeComboYear)
 	ON_CBN_SELCHANGE(IDC_COMBO_MONTH, &CKWaterDlg::OnCbnSelchangeComboMonth)
+	ON_BN_CLICKED(IDC_BTN_RESET, &CKWaterDlg::OnBnClickedBtnReset)
 END_MESSAGE_MAP()
 
-void CKWaterDlg::CalcEvapotranspiration(vector<double>* func, vector<int>nvX)
+void CKWaterDlg::CalcPredict(vector<double>* func, vector<int>nvX, INT nMonth, INT nMode)
 {
-	for (int x : nvX)
+	if (nMode == SOIL)
 	{
-		double y = -0.0001 * pow(x, 2) + 0.0545 * x - 1.9475;
-		func->push_back(y);
+		if (nMonth > 0)
+		{
+			INT nGap = nvX.size() / 12;
+			for (INT i = 0; i < nGap * nMonth; i++)
+			{
+				double y = m_fPrecip + m_fRfIntensity + m_fRfSoil + m_fRfSoil_Intensity + m_feva;
+				func->push_back(y);
+			}
+			for (INT i = 0; i < nvX.size() - (nGap * nMonth); i++)
+			{
+				double y = m_fPrecip + m_fRfIntensity + m_fRfSoil + m_fRfSoil_Intensity + m_feva;
+				func->push_back(y);
+			}
+		}
+		else
+		{
+			for (int x : nvX)
+			{
+				double y = m_fPrecip + m_fRfIntensity + m_fRfSoil + m_fRfSoil_Intensity + m_feva;
+				func->push_back(y);
+			}
+		}
+	}
+	else if (nMode == EVE)
+	{
+		for (int x : nvX)
+		{
+			double y = -0.0001 * pow(x, 2) + 0.0545 * x - 1.9475;
+			func->push_back(y);
+		}
 	}
 }
 
@@ -97,7 +127,7 @@ BOOL CKWaterDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);
 	SetIcon(m_hIcon, FALSE);
 
-	tb.SetHwnd(m_hWnd);
+	m_CDamTable.SetHwnd(m_hWnd);
 
 	CString strYear;
 	strYear.Format(_T("2022"));
@@ -136,9 +166,27 @@ BOOL CKWaterDlg::OnInitDialog()
 	this->m_CbMonth.AddString(strMonth);
 	strMonth.Format(_T("December"));
 	this->m_CbMonth.AddString(strMonth);
-	
+
+	m_CDamTable.ConnectToDB();
+	m_CPredictionsoilerosionTable.ConnectToDB();
 
 	return TRUE;
+}
+
+vector<FLOAT> CKWaterDlg::CalcMonthEvapotranspiration(vector<DOUBLE>* vec, INT nMonth)
+{
+	INT nSize = vec->size();
+	INT nGap = nSize / nMonth;
+	vector<FLOAT>vnEvapotranspirationperMon(nMonth);
+
+	INT cnt=0;
+	for (int i = 0; i < nSize; i += nGap)
+	{
+		for (int j=i;j<i + nGap;j++)
+			vnEvapotranspirationperMon[cnt] += vec->at(j);
+		vnEvapotranspirationperMon[cnt++] /= nGap;
+	}
+	return vnEvapotranspirationperMon;
 }
 
 void CKWaterDlg::DrawGraph()
@@ -152,11 +200,13 @@ void CKWaterDlg::DrawGraph()
 
 	vector<INT>vn_xVar;
 	vector<DOUBLE>vd_yEvapotranspiration;
+
 	m_nSize = 600;
 
 	for (int i = 0; i < m_nSize; i++)
 		vn_xVar.push_back(i);
-	CalcEvapotranspiration(&vd_yEvapotranspiration, vn_xVar);
+	CalcPredict(&vd_yEvapotranspiration, vn_xVar, m_nReset,EVE);
+	m_vfEvaperMon.swap(CalcMonthEvapotranspiration(&vd_yEvapotranspiration, 12));
 
 	m_fMinVar = m_fMaxVar = vd_yEvapotranspiration.at(0);
 	for (double y : vd_yEvapotranspiration)
@@ -277,10 +327,10 @@ void CKWaterDlg::On_DB_Export() // DB 내보내기
 
 LRESULT CKWaterDlg::UpdateInform(WPARAM wparam, LPARAM lparam)
 {
-	SetDlgItemText(IDC_EDIT_AREA,(LPCTSTR)tb.GetArea());
-	SetDlgItemText(IDC_EDIT_HEIGHT,(LPCTSTR)tb.GetHeight());
-	SetDlgItemText(IDC_EDIT_LENGTH, (LPCTSTR)tb.GetLength());
-	SetDlgItemText(IDC_EDIT_DAM, (LPCTSTR)tb.GetName());
+	SetDlgItemText(IDC_EDIT_AREA,(LPCTSTR)m_CDamTable.GetArea());
+	SetDlgItemText(IDC_EDIT_HEIGHT,(LPCTSTR)m_CDamTable.GetHeight());
+	SetDlgItemText(IDC_EDIT_LENGTH, (LPCTSTR)m_CDamTable.GetLength());
+	SetDlgItemText(IDC_EDIT_DAM, (LPCTSTR)m_CDamTable.GetName());
 
 	return LRESULT();
 }
@@ -289,20 +339,48 @@ void CKWaterDlg::OnBnClickedBtnSearch()
 {
 	CString cstcode;
 	cstcode.Format(_T("%d"), GetDlgItemInt(IDC_EDIT_CODE));
-	tb.SetFindDamcode(cstcode);
-	tb.ConnectToDB();
-	tb.GetColumns();
+	m_CDamTable.SetFindDamcode(cstcode);
+	
+	m_CDamTable.GetColumns();
 }
 
+BOOL CKWaterDlg::ISCode()
+{
+	INT nCode = GetDlgItemInt(IDC_EDIT_CODE);
+	if (nCode < 1)
+		return FALSE;
+	else
+		return nCode;
+}
 
 void CKWaterDlg::OnCbnSelchangeComboYear()
 {
-	DrawGraph();
+	if (ISCode())
+	{
+		if (m_vfEvaperMon.size() > 0)		 m_vfEvaperMon.clear();
+		DrawGraph();
+	}
 }
 
 
 void CKWaterDlg::OnCbnSelchangeComboMonth()
 {
+	if (!ISCode() || !m_vfEvaperMon.size())
+		return;
 	INT nCursel;
-	//nCursel = ((CComboBox*)GetDlgItem(IDC_COMBO_COLORSET))->GetCurSel();
+	nCursel = ((CComboBox*)GetDlgItem(IDC_COMBO_MONTH))->GetCurSel();
+	SetDlgItemInt(IDC_EDIT_FLOODWATERLEVEL, m_vfEvaperMon[nCursel]);
+}
+
+
+void CKWaterDlg::OnBnClickedBtnReset()
+{
+	INT nYear = GetDlgItemInt(IDC_COMBO_YEAR);
+	INT nCode = GetDlgItemInt(IDC_EDIT_CODE);
+	if (nYear <1 || nCode <1||!m_vfEvaperMon.size() || AfxMessageBox(_T("토사를 제거 하시겠습니까?\n 저장하지않았을 경우 이전으로 되돌릴 수 없습니다."), MB_YESNO | MB_ICONQUESTION) == IDNO)
+		return;
+	m_nReset = ((CComboBox*)GetDlgItem(IDC_COMBO_MONTH))->GetCurSel();
+	m_feva = m_vfEvaperMon[m_nReset];
+	m_CPredictionsoilerosionTable.Insert(nCode, nYear, m_nReset, m_fPrecip, m_fRfIntensity, m_fRfSoil, m_fRfSoil_Intensity, m_fSunshine, m_feva);
+	DrawGraph();
 }
